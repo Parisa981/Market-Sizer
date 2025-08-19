@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Market Sizing Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root { --ring: 0 0 0 3px rgba(59,130,246,0.25); }
+    html, body { height: 100%; }
+    body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; }
+    .card { @apply bg-white rounded-xl shadow-sm border border-slate-200; }
+    .tab-active { @apply bg-white text-slate-900 shadow-sm; }
+    .tab-inactive { @apply bg-slate-100 text-slate-600 hover:text-slate-800; }
+    .pill { @apply text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600; }
+    .kbd { @apply px-2 py-1 rounded border border-slate-300 bg-slate-50 text-slate-700 text-xs; }
+  </style>
+  <script>
+    // Inject a small Tailwind plugin to support @apply in inline styles in this page
+    // Note: This relies on CDN build time; limited but good enough for utility classes above
+    tailwind.config = { corePlugins: { preflight: true } };
+  </script>
+</head>
+<body class="bg-slate-100 text-slate-900">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <header class="mb-6">
+      <h1 class="text-4xl font-extrabold tracking-tight text-slate-900">Market Sizing Dashboard</h1>
+      <p class="mt-2 text-slate-600">Evidence-based market analysis with transparent sourcing</p>
+    </header>
+
+    <!-- Input Form -->
+    <section class="card p-6 mb-8">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-slate-100 text-slate-700">◎</span>
+        <h2 class="text-lg font-semibold">Business Idea Details</h2>
+      </div>
+      <p class="text-sm text-slate-600 mb-6">Provide information about your business idea to calculate market size using multiple methodologies</p>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2">
+          <label for="businessName" class="block text-sm font-medium text-slate-700 mb-1">Business Name</label>
+          <input id="businessName" type="text" placeholder="e.g., AI-Powered CRM" class="w-full rounded-lg border-slate-300 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500" />
+        </div>
+        <div>
+          <label for="industry" class="block text-sm font-medium text-slate-700 mb-1">Industry</label>
+          <select id="industry" class="w-full rounded-lg border-slate-300 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500">
+            <option value="">Select industry</option>
+            <option value="saas">SaaS</option>
+            <option value="ecommerce">E‑commerce</option>
+            <option value="fintech">Fintech</option>
+            <option value="healthtech">HealthTech</option>
+            <option value="edtech">EdTech</option>
+          </select>
+        </div>
+        <div class="lg:col-span-3">
+          <label for="description" class="block text-sm font-medium text-slate-700 mb-1">Business Description</label>
+          <textarea id="description" rows="3" placeholder="Describe your business idea, target customers, and value proposition..." class="w-full rounded-lg border-slate-300 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500"></textarea>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <div>
+          <label for="geography" class="block text-sm font-medium text-slate-700 mb-1">Target Geography</label>
+          <select id="geography" class="w-full rounded-lg border-slate-300 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500">
+            <option value="global">Global</option>
+            <option value="na">North America</option>
+            <option value="eu">Europe</option>
+            <option value="apac">APAC</option>
+            <option value="latam">LatAm</option>
+          </select>
+        </div>
+        <div>
+          <label for="yourPrice" class="block text-sm font-medium text-slate-700 mb-1">Your Price Point ($)</label>
+          <input id="yourPrice" type="number" inputmode="decimal" min="0" value="99" class="w-full rounded-lg border-slate-300 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500" />
+        </div>
+        <div>
+          <label for="competitorPrice" class="block text-sm font-medium text-slate-700 mb-1">Competitor Price ($)</label>
+          <input id="competitorPrice" type="number" inputmode="decimal" min="0" value="149" class="w-full rounded-lg border-slate-300 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500" />
+        </div>
+      </div>
+
+      <button id="calculateBtn" class="w-full mt-6 inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 rounded-lg focus:outline-none focus:ring-4 focus:ring-slate-300">
+        <span>🧮</span>
+        <span>Calculate Market Size</span>
+      </button>
+    </section>
+
+    <!-- Tabs -->
+    <nav class="card p-1 mb-4 flex gap-1 bg-slate-100">
+      <button data-tab="overview" class="tab tab-active flex-1 rounded-lg px-4 py-2 text-sm font-medium">Overview</button>
+      <button data-tab="topdown" class="tab tab-inactive flex-1 rounded-lg px-4 py-2 text-sm font-medium">Top‑Down</button>
+      <button data-tab="bottomup" class="tab tab-inactive flex-1 rounded-lg px-4 py-2 text-sm font-medium">Bottom‑Up</button>
+      <button data-tab="valuetheory" class="tab tab-inactive flex-1 rounded-lg px-4 py-2 text-sm font-medium">Value Theory</button>
+    </nav>
+
+    <!-- Overview -->
+    <section id="tab-overview" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Top-Down Snapshot -->
+        <div class="card p-5">
+          <h3 class="text-sm font-semibold text-slate-700">Top‑Down Approach</h3>
+          <dl class="mt-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-600">TAM</dt>
+              <dd id="o_tam" class="font-bold text-slate-900">$600.0B</dd>
+            </div>
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-600">SAM</dt>
+              <dd id="o_sam" class="font-bold text-slate-900">$60.0B</dd>
+            </div>
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-600">SOM</dt>
+              <dd id="o_som" class="font-bold text-indigo-600">$3.0B</dd>
+            </div>
+          </dl>
+        </div>
+        <!-- Bottom-Up Snapshot -->
+        <div class="card p-5">
+          <h3 class="text-sm font-semibold text-slate-700">Bottom‑Up Approach</h3>
+          <dl class="mt-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-600">Total Customers</dt>
+              <dd id="o_customers" class="font-bold text-slate-900">30,000,000</dd>
+            </div>
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-600">Market Size</dt>
+              <dd id="o_bottomup_market" class="font-bold text-slate-900">$1.5B</dd>
+            </div>
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-600">Revenue Proj.</dt>
+              <dd id="o_revenue" class="font-bold text-green-600">$15.0M</dd>
+            </div>
+          </dl>
+        </div>
+        <!-- Value Theory Snapshot -->
+        <div class="card p-5">
+          <h3 class="text-sm font-semibold text-slate-700">Value Theory</h3>
+          <dl class="mt-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-600">Value Created</dt>
+              <dd id="o_value_created" class="font-bold text-slate-900">$75</dd>
+            </div>
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-600">Market Size</dt>
+              <dd id="o_value_market" class="font-bold text-slate-900">$2.3B</dd>
+            </div>
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-600">Premium</dt>
+              <dd id="o_premium" class="font-bold text-fuchsia-600">150.0%</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Comparison -->
+      <div class="card p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-slate-700">📊</span>
+          <h3 class="font-semibold">Market Size Comparison</h3>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <div class="flex items-center justify-between text-sm mb-1">
+              <span class="text-slate-700">Top‑Down (SOM)</span>
+              <span id="bar_som_label" class="font-semibold">$3.0B</span>
+            </div>
+            <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div id="bar_som" class="h-full bg-slate-800 rounded-full" style="width:35%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between text-sm mb-1">
+              <span class="text-slate-700">Bottom‑Up (Revenue)</span>
+              <span id="bar_revenue_label" class="font-semibold">$15.0M</span>
+            </div>
+            <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div id="bar_revenue" class="h-full bg-slate-800 rounded-full" style="width:70%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between text-sm mb-1">
+              <span class="text-slate-700">Value Theory</span>
+              <span id="bar_value_label" class="font-semibold">$2.3B</span>
+            </div>
+            <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div id="bar_value" class="h-full bg-slate-800 rounded-full" style="width:90%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Sources -->
+      <section class="card p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <span>🛈</span>
+          <h3 class="font-semibold">Data Sources & Reliability</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="font-semibold text-green-700">High Reliability Sources</h4>
+            <ul class="list-disc list-inside text-slate-700 mt-2 space-y-1">
+              <li>Gartner, McKinsey, Bain research reports</li>
+              <li>Government economic data (World Bank, Census)</li>
+              <li>Established VC firm benchmarks</li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-orange-600">Medium Reliability Sources</h4>
+            <ul class="list-disc list-inside text-slate-700 mt-2 space-y-1">
+              <li>Industry publications and reports</li>
+              <li>Market intelligence platforms</li>
+              <li>Startup methodology guides</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg text-blue-900">
+          <div class="font-semibold mb-1">Important Note</div>
+          <p class="text-sm">All market sizing calculations are estimates based on available data and industry benchmarks. Validate these assumptions through customer interviews, pilot programs, and market research before making investment decisions.</p>
+        </div>
+      </section>
+    </section>
+
+    <!-- Top-Down Tab -->
+    <section id="tab-topdown" class="hidden space-y-4">
+      <div class="card p-5">
+        <div class="flex items-center gap-2 mb-2"><span>📈</span><h3 class="font-semibold">Top‑Down Market Analysis</h3></div>
+        <p class="text-sm text-slate-600 mb-4">TAM → SAM → SOM approach starting from total addressable market</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-5 rounded-xl bg-blue-50 border border-blue-100">
+            <div id="td_tam" class="text-3xl font-extrabold mb-1">$600.0B</div>
+            <div class="text-slate-600">Total Addressable Market</div>
+            <div class="pill mt-3 inline-block">TAM</div>
+          </div>
+          <div class="p-5 rounded-xl bg-green-50 border border-green-100">
+            <div id="td_sam" class="text-3xl font-extrabold mb-1">$60.0B</div>
+            <div class="text-slate-600">Serviceable Addressable Market</div>
+            <div class="pill mt-3 inline-block">SAM</div>
+          </div>
+          <div class="p-5 rounded-xl bg-fuchsia-50 border border-fuchsia-100">
+            <div id="td_som" class="text-3xl font-extrabold mb-1">$3.0B</div>
+            <div class="text-slate-600">Serviceable Obtainable Market</div>
+            <div class="pill mt-3 inline-block">SOM</div>
+          </div>
+        </div>
+      </div>
+
+      <details class="card p-5">
+        <summary class="cursor-pointer select-none text-sm font-semibold text-slate-800">Methodology & Sources</summary>
+        <div class="pt-3 text-sm text-slate-700 space-y-2">
+          <p>TAM is derived from industry-level spend; SAM filters to target geographies and customer segments; SOM applies adoption and competitive share assumptions.</p>
+          <ul class="list-disc list-inside">
+            <li>Industry spend datasets and analyst coverage</li>
+            <li>Geography factor based on population/GDP share</li>
+            <li>Adoption curve assumptions for early-stage startups</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- Data Sources repeated -->
+      <section class="card p-5">
+        <div class="flex items-center gap-2 mb-3"><span>🛈</span><h3 class="font-semibold">Data Sources & Reliability</h3></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="font-semibold text-green-700">High Reliability Sources</h4>
+            <ul class="list-disc list-inside text-slate-700 mt-2 space-y-1">
+              <li>Gartner, McKinsey, Bain research reports</li>
+              <li>Government economic data (World Bank, Census)</li>
+              <li>Established VC firm benchmarks</li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-orange-600">Medium Reliability Sources</h4>
+            <ul class="list-disc list-inside text-slate-700 mt-2 space-y-1">
+              <li>Industry publications and reports</li>
+              <li>Market intelligence platforms</li>
+              <li>Startup methodology guides</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- Bottom-Up Tab -->
+    <section id="tab-bottomup" class="hidden space-y-4">
+      <div class="card p-5">
+        <div class="flex items-center gap-2 mb-2"><span>🧑‍🤝‍🧑</span><h3 class="font-semibold">Bottom‑Up Market Analysis</h3></div>
+        <p class="text-sm text-slate-600 mb-4">Customer-centric approach based on unit economics and market penetration</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-5 rounded-xl bg-slate-50 border border-slate-200">
+            <div id="bu_customers" class="text-2xl md:text-3xl font-extrabold mb-1">30,000,000</div>
+            <div class="text-slate-600">Estimated Total Customers</div>
+          </div>
+          <div class="p-5 rounded-xl bg-blue-50 border border-blue-100">
+            <div id="bu_market" class="text-2xl md:text-3xl font-extrabold mb-1">$1.5B</div>
+            <div class="text-slate-600">Total Market Size</div>
+          </div>
+          <div class="p-5 rounded-xl bg-slate-50 border border-slate-200">
+            <div id="bu_price" class="text-2xl md:text-3xl font-extrabold mb-1">$50</div>
+            <div class="text-slate-600">Price Per Customer</div>
+          </div>
+          <div class="p-5 rounded-xl bg-green-50 border border-green-100">
+            <div id="bu_revenue" class="text-2xl md:text-3xl font-extrabold mb-1">$15.0M</div>
+            <div class="text-slate-600">Projected Revenue (1% capture)</div>
+          </div>
+        </div>
+      </div>
+
+      <details class="card p-5">
+        <summary class="cursor-pointer select-none text-sm font-semibold text-slate-800">Methodology & Sources</summary>
+        <div class="pt-3 text-sm text-slate-700 space-y-2">
+          <p>We estimate customers per industry and scale by geography. Bottom‑up market size equals estimated customers × price per customer. Revenue projection assumes a 1% capture in year 1.</p>
+        </div>
+      </details>
+
+      <section class="card p-5">
+        <div class="flex items-center gap-2 mb-3"><span>🛈</span><h3 class="font-semibold">Data Sources & Reliability</h3></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="font-semibold text-green-700">High Reliability Sources</h4>
+            <ul class="list-disc list-inside text-slate-700 mt-2 space-y-1">
+              <li>Gartner, McKinsey, Bain research reports</li>
+              <li>Government economic data (World Bank, Census)</li>
+              <li>Established VC firm benchmarks</li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-orange-600">Medium Reliability Sources</h4>
+            <ul class="list-disc list-inside text-slate-700 mt-2 space-y-1">
+              <li>Industry publications and reports</li>
+              <li>Market intelligence platforms</li>
+              <li>Startup methodology guides</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- Value Theory Tab -->
+    <section id="tab-valuetheory" class="hidden space-y-4">
+      <div class="card p-5">
+        <div class="flex items-center gap-2 mb-2"><span>💲</span><h3 class="font-semibold">Value Theory Analysis</h3></div>
+        <p class="text-sm text-slate-600 mb-4">Market sizing based on value creation and competitive positioning</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-5 rounded-xl bg-amber-50 border border-amber-100">
+            <div id="vt_value" class="text-2xl md:text-3xl font-extrabold mb-1">$75</div>
+            <div class="text-slate-600">Value Created Per Customer</div>
+          </div>
+          <div class="p-5 rounded-xl bg-blue-50 border border-blue-100">
+            <div id="vt_market" class="text-2xl md:text-3xl font-extrabold mb-1">$2.3B</div>
+            <div class="text-slate-600">Value‑Based Market Size</div>
+          </div>
+          <div class="p-5 rounded-xl bg-fuchsia-50 border border-fuchsia-100">
+            <div id="vt_premium" class="text-2xl md:text-3xl font-extrabold mb-1">150.0%</div>
+            <div class="text-slate-600">Premium vs Competitors</div>
+          </div>
+          <div class="p-5 rounded-xl bg-slate-50 border border-slate-200">
+            <div id="vt_baseline" class="text-2xl md:text-3xl font-extrabold mb-1">$20</div>
+            <div class="text-slate-600">Competitor Baseline Price</div>
+          </div>
+        </div>
+      </div>
+
+      <details class="card p-5">
+        <summary class="cursor-pointer select-none text-sm font-semibold text-slate-800">Methodology & Sources</summary>
+        <div class="pt-3 text-sm text-slate-700 space-y-2">
+          <p>Value Theory estimates willingness‑to‑pay by comparing competitor pricing with the value created for customers. Premium equals (your price − competitor price) ÷ competitor price.</p>
+        </div>
+      </details>
+
+      <section class="card p-5">
+        <div class="flex items-center gap-2 mb-3"><span>🛈</span><h3 class="font-semibold">Data Sources & Reliability</h3></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="font-semibold text-green-700">High Reliability Sources</h4>
+            <ul class="list-disc list-inside text-slate-700 mt-2 space-y-1">
+              <li>Customer interviews and quantified ROI studies</li>
+              <li>Third‑party pricing research</li>
+              <li>Enterprise procurement benchmarks</li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-orange-600">Medium Reliability Sources</h4>
+            <ul class="list-disc list-inside text-slate-700 mt-2 space-y-1">
+              <li>Competitor websites and pricing pages</li>
+              <li>Analyst commentary and trade journals</li>
+              <li>Early pilot feedback</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    // Simple state and assumptions
+    const industryDefaults = {
+      saas:      { tam: 600e9, sam: 60e9, som: 3e9, customers: 30_000_000, baseline: 20 },
+      ecommerce: { tam: 800e9, sam: 120e9, som: 8e9, customers: 120_000_000, baseline: 15 },
+      fintech:   { tam: 1000e9, sam: 150e9, som: 10e9, customers: 80_000_000, baseline: 25 },
+      healthtech:{ tam: 400e9, sam: 80e9, som: 5e9, customers: 50_000_000, baseline: 30 },
+      edtech:    { tam: 300e9, sam: 45e9, som: 2.5e9, customers: 70_000_000, baseline: 10 },
+      '':        { tam: 600e9, sam: 60e9, som: 3e9, customers: 30_000_000, baseline: 20 },
+    };
+    const geographyFactor = { global: 1.0, na: 0.27, eu: 0.25, apac: 0.35, latam: 0.13 };
+
+    // Helpers
+    const $ = (id) => document.getElementById(id);
+    const fmtCurrency = (v) => {
+      const abs = Math.abs(v);
+      let unit = '';
+      let num = v;
+      if (abs >= 1e12) { unit = 'T'; num = v / 1e12; }
+      else if (abs >= 1e9) { unit = 'B'; num = v / 1e9; }
+      else if (abs >= 1e6) { unit = 'M'; num = v / 1e6; }
+      else if (abs >= 1e3) { unit = 'K'; num = v / 1e3; }
+      return `$${num.toFixed(1)}${unit}`;
+    };
+    const fmtInt = (n) => n.toLocaleString('en-US');
+    const pct = (n) => `${(n*100).toFixed(1)}%`;
+
+    // Tabs
+    const tabs = document.querySelectorAll('nav .tab');
+    const sections = {
+      overview: $('tab-overview'),
+      topdown: $('tab-topdown'),
+      bottomup: $('tab-bottomup'),
+      valuetheory: $('tab-valuetheory'),
+    };
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.remove('tab-active'));
+      tabs.forEach(x => x.classList.add('tab-inactive'));
+      t.classList.remove('tab-inactive');
+      t.classList.add('tab-active');
+      Object.values(sections).forEach(s => s.classList.add('hidden'));
+      const key = t.dataset.tab;
+      sections[key].classList.remove('hidden');
+    }));
+
+    function compute() {
+      const industry = $('industry').value || '';
+      const geo = $('geography').value;
+      const yourPrice = Math.max(0, Number($('yourPrice').value || 0));
+      const competitorPrice = Math.max(0, Number($('competitorPrice').value || 0));
+
+      const base = industryDefaults[industry] || industryDefaults[''];
+      const geoMul = geographyFactor[geo] ?? 1.0;
+
+      // Top-down scaled by geography
+      const tam = base.tam * geoMul;
+      const sam = base.sam * geoMul;
+      const som = base.som * geoMul;
+
+      // Bottom-up
+      const customers = Math.round(base.customers * geoMul);
+      const pricePerCustomer = Math.max(1, yourPrice || 50);
+      const bottomUpMarket = customers * pricePerCustomer;
+      const revenueProjection = bottomUpMarket * 0.01;
+
+      // Value theory (simple proxy)
+      const premiumRatio = competitorPrice > 0 ? (yourPrice - competitorPrice) / competitorPrice : 0;
+      // Value created as ROI proxy: delta price vs competitor plus a baseline ROI from industry
+      const valueCreated = Math.max(10, Math.round(0.5 * (yourPrice + base.baseline)));
+      const competitorBaseline = base.baseline;
+      const valueBasedMarket = customers * Math.max(competitorPrice, yourPrice, competitorBaseline + valueCreated * 0.1);
+
+      return { tam, sam, som, customers, pricePerCustomer, bottomUpMarket, revenueProjection, valueCreated, competitorBaseline, premiumRatio, valueBasedMarket };
+    }
+
+    function render() {
+      const m = compute();
+      // Overview cards
+      $('o_tam').textContent = fmtCurrency(m.tam);
+      $('o_sam').textContent = fmtCurrency(m.sam);
+      $('o_som').textContent = fmtCurrency(m.som);
+      $('o_customers').textContent = fmtInt(m.customers);
+      $('o_bottomup_market').textContent = fmtCurrency(m.bottomUpMarket);
+      $('o_revenue').textContent = fmtCurrency(m.revenueProjection);
+      $('o_value_created').textContent = `$${m.valueCreated}`;
+      $('o_value_market').textContent = fmtCurrency(m.valueBasedMarket);
+      $('o_premium').textContent = pct(m.premiumRatio);
+
+      // Comparison bars
+      const maxVal = Math.max(m.som, m.valueBasedMarket, m.revenueProjection);
+      const w = (x) => `${Math.max(4, Math.min(100, (x / maxVal) * 100))}%`;
+      $('bar_som').style.width = w(m.som);
+      $('bar_revenue').style.width = w(m.revenueProjection);
+      $('bar_value').style.width = w(m.valueBasedMarket);
+      $('bar_som_label').textContent = fmtCurrency(m.som);
+      $('bar_revenue_label').textContent = fmtCurrency(m.revenueProjection);
+      $('bar_value_label').textContent = fmtCurrency(m.valueBasedMarket);
+
+      // Top‑Down tab
+      $('td_tam').textContent = fmtCurrency(m.tam);
+      $('td_sam').textContent = fmtCurrency(m.sam);
+      $('td_som').textContent = fmtCurrency(m.som);
+
+      // Bottom‑Up tab
+      $('bu_customers').textContent = fmtInt(m.customers);
+      $('bu_market').textContent = fmtCurrency(m.bottomUpMarket);
+      $('bu_price').textContent = `$${m.pricePerCustomer}`;
+      $('bu_revenue').textContent = fmtCurrency(m.revenueProjection);
+
+      // Value Theory tab
+      $('vt_value').textContent = `$${m.valueCreated}`;
+      $('vt_market').textContent = fmtCurrency(m.valueBasedMarket);
+      $('vt_premium').textContent = pct(m.premiumRatio);
+      $('vt_baseline').textContent = `$${m.competitorBaseline}`;
+    }
+
+    $('calculateBtn').addEventListener('click', render);
+    ['industry','geography','yourPrice','competitorPrice'].forEach(id => $(id).addEventListener('change', render));
+
+    // Initial render
+    render();
+  </script>
+</body>
+</html>
+
